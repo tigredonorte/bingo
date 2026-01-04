@@ -21,7 +21,10 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "check:component": "node scripts/check-component.js",
-    "check:components:batch": "node scripts/batch-component-check.js"
+    "check:components:batch": "node scripts/batch-component-check.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "peerDependencies": {
     "react": "^18.0.0",

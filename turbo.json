@@ -26,6 +26,16 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**", "**/*.test.{ts,tsx}", "vitest.config.*"],
+      "outputs": ["coverage/**"]
+    },
+    "test:coverage": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**", "**/*.test.{ts,tsx}", "vitest.config.*"],
+      "outputs": ["coverage/**"]
     }
   }
 }
