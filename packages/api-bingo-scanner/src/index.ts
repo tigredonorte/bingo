@@ -1,12 +1,12 @@
 /**
- * @repo/bingo-scanner
+ * @repo/api-bingo-scanner
  *
  * A library to scan bingo cards and detect numbers using OCR.
  *
  * @example
  * Simple usage - get numbers as an array:
  * ```typescript
- * import { scanBingoCard } from '@repo/bingo-scanner';
+ * import { scanBingoCard } from '@repo/api-bingo-scanner';
  *
  * const numbers = await scanBingoCard('./bingo-card.png');
  * console.log(numbers); // [5, 22, 34, null, 61, 12, ...] (null = FREE space)
@@ -15,7 +15,7 @@
  * @example
  * Detailed results with confidence scores:
  * ```typescript
- * import { scanBingoCardDetailed } from '@repo/bingo-scanner';
+ * import { scanBingoCardDetailed } from '@repo/api-bingo-scanner';
  *
  * const result = await scanBingoCardDetailed('./bingo-card.png');
  * console.log(result.numbers);    // Array of numbers
@@ -26,7 +26,7 @@
  * @example
  * Using the BingoScanner class for multiple scans:
  * ```typescript
- * import { BingoScanner } from '@repo/bingo-scanner';
+ * import { BingoScanner } from '@repo/api-bingo-scanner';
  *
  * const scanner = new BingoScanner({
  *   language: 'eng',

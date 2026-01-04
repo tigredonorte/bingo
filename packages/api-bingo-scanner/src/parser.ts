@@ -34,6 +34,13 @@ const FREE_SPACE_PATTERNS = [
 ];
 
 /**
+ * Escapes special regex characters in a string
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Cleans OCR text by applying common corrections
  */
 export function cleanOcrText(text: string): string {
@@ -44,7 +51,7 @@ export function cleanOcrText(text: string): string {
 
   // Apply OCR corrections
   for (const [wrong, correct] of Object.entries(OCR_CORRECTIONS)) {
-    cleaned = cleaned.replace(new RegExp(wrong, 'g'), correct);
+    cleaned = cleaned.replace(new RegExp(escapeRegex(wrong), 'g'), correct);
   }
 
   return cleaned;
