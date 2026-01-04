@@ -1,22 +1,25 @@
 {
-  "name": "web",
+  "name": "@repo/auth",
   "version": "0.1.0",
-  "type": "module",
   "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./providers": "./src/providers.tsx",
+    "./hooks": "./src/hooks.ts",
+    "./device-detection": "./src/device-detection.ts"
+  },
   "scripts": {
-    "dev": "next dev --port 3000",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint --max-warnings 0",
-    "check-types": "next typegen && tsc --noEmit"
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/auth": "workspace:*",
-    "@repo/ui": "workspace:*",
-    "next": "16.1.0",
     "next-auth": "^5.0.0-beta.25",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
+  },
+  "peerDependencies": {
+    "next": ">=14.0.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
