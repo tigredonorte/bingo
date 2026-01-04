@@ -3,6 +3,7 @@ import {
   BINGO_COLUMNS,
   STANDARD_BINGO_RANGES,
   DEFAULT_OPTIONS,
+  DEFAULT_MULTI_CARD_OPTIONS,
 } from '../types';
 
 describe('BINGO_COLUMNS', () => {
@@ -64,5 +65,21 @@ describe('DEFAULT_OPTIONS', () => {
 
   it('should have 1-75 as default number range', () => {
     expect(DEFAULT_OPTIONS.numberRange).toEqual({ min: 1, max: 75 });
+  });
+});
+
+describe('DEFAULT_MULTI_CARD_OPTIONS', () => {
+  it('should inherit base options', () => {
+    expect(DEFAULT_MULTI_CARD_OPTIONS.language).toBe('eng');
+    expect(DEFAULT_MULTI_CARD_OPTIONS.preprocess).toBe(true);
+    expect(DEFAULT_MULTI_CARD_OPTIONS.gridSize).toEqual({ rows: 5, cols: 5 });
+  });
+
+  it('should have 5% as minimum card area percentage', () => {
+    expect(DEFAULT_MULTI_CARD_OPTIONS.minCardAreaPercent).toBe(0.05);
+  });
+
+  it('should have 90% as maximum card area percentage', () => {
+    expect(DEFAULT_MULTI_CARD_OPTIONS.maxCardAreaPercent).toBe(0.9);
   });
 });

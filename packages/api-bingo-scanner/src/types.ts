@@ -55,6 +55,62 @@ export interface ScannerOptions {
 }
 
 /**
+ * Options for multi-card scanning
+ */
+export interface MultiCardScannerOptions extends ScannerOptions {
+  /**
+   * Expected number of cards in the image (optional)
+   * If not specified, will auto-detect cards
+   */
+  expectedCards?: number;
+
+  /**
+   * Minimum card area as percentage of image area (default: 0.05 = 5%)
+   * Cards smaller than this will be ignored
+   */
+  minCardAreaPercent?: number;
+
+  /**
+   * Maximum card area as percentage of image area (default: 0.9 = 90%)
+   * Cards larger than this will be ignored
+   */
+  maxCardAreaPercent?: number;
+
+  /**
+   * Card layout hint for better detection
+   */
+  cardLayout?: {
+    rows: number;
+    cols: number;
+  };
+}
+
+/**
+ * Represents a detected card region in the image
+ */
+export interface DetectedCard {
+  /**
+   * Bounding box of the detected card
+   */
+  bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+
+  /**
+   * Index of the card (0-based, in reading order)
+   */
+  index: number;
+
+  /**
+   * Extracted image buffer of the card
+   */
+  imageBuffer: Buffer;
+}
+
+/**
  * Result of scanning a single cell in the bingo card
  */
 export interface CellResult {
@@ -129,6 +185,42 @@ export interface ScanResult {
 }
 
 /**
+ * Result of scanning multiple bingo cards from a single image
+ */
+export interface MultiCardScanResult {
+  /**
+   * Array of number arrays, one per detected card
+   * Each inner array contains the numbers for that card
+   */
+  cards: (number | null)[][];
+
+  /**
+   * Detailed results for each card
+   */
+  cardResults: ScanResult[];
+
+  /**
+   * Information about detected card regions
+   */
+  detectedCards: Omit<DetectedCard, 'imageBuffer'>[];
+
+  /**
+   * Total number of cards detected
+   */
+  cardCount: number;
+
+  /**
+   * Overall confidence score across all cards (0-100)
+   */
+  confidence: number;
+
+  /**
+   * Total processing time in milliseconds
+   */
+  processingTime: number;
+}
+
+/**
  * Image input types supported by the scanner
  */
 export type ImageInput =
@@ -163,4 +255,15 @@ export const DEFAULT_OPTIONS: Required<Omit<ScannerOptions, 'workerPath' | 'core
   gridSize: { rows: 5, cols: 5 },
   hasFreeSpace: true,
   numberRange: { min: 1, max: 75 },
+};
+
+/**
+ * Default multi-card scanner options
+ */
+export const DEFAULT_MULTI_CARD_OPTIONS: Required<
+  Omit<MultiCardScannerOptions, 'workerPath' | 'corePath' | 'langPath' | 'expectedCards' | 'cardLayout'>
+> = {
+  ...DEFAULT_OPTIONS,
+  minCardAreaPercent: 0.05,
+  maxCardAreaPercent: 0.9,
 };

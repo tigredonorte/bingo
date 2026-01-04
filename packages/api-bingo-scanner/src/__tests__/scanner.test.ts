@@ -258,3 +258,128 @@ describe('BingoScanner - FREE space handling', () => {
     await scanner.terminate();
   });
 });
+
+describe('BingoScanner - Multi-card scanning', () => {
+  let scanner: BingoScanner;
+
+  beforeEach(() => {
+    scanner = new BingoScanner();
+    vi.clearAllMocks();
+  });
+
+  afterEach(async () => {
+    await scanner.terminate();
+  });
+
+  it('should scan multiple cards from a single image', async () => {
+    // Create a larger image to hold multiple cards
+    const testImage = await createTestImage(500, 500);
+
+    const result = await scanner.scanMultipleFromImage(testImage, {
+      cardLayout: { rows: 2, cols: 2 },
+    });
+
+    expect(result.cardCount).toBe(4);
+    expect(result.cards).toHaveLength(4);
+    expect(result.cardResults).toHaveLength(4);
+    expect(result.detectedCards).toHaveLength(4);
+  });
+
+  it('should return array of number arrays', async () => {
+    const testImage = await createTestImage(500, 250);
+
+    const result = await scanner.scanMultipleFromImage(testImage, {
+      cardLayout: { rows: 1, cols: 2 },
+    });
+
+    expect(result.cards).toHaveLength(2);
+    expect(Array.isArray(result.cards[0])).toBe(true);
+    expect(Array.isArray(result.cards[1])).toBe(true);
+    // Each card should have 25 numbers (5x5 grid)
+    expect(result.cards[0]).toHaveLength(25);
+    expect(result.cards[1]).toHaveLength(25);
+  });
+
+  it('should include detected card bounds', async () => {
+    const testImage = await createTestImage(600, 300);
+
+    const result = await scanner.scanMultipleFromImage(testImage, {
+      cardLayout: { rows: 1, cols: 2 },
+    });
+
+    expect(result.detectedCards[0]?.bounds).toEqual({
+      x: 0,
+      y: 0,
+      width: 300,
+      height: 300,
+    });
+    expect(result.detectedCards[1]?.bounds).toEqual({
+      x: 300,
+      y: 0,
+      width: 300,
+      height: 300,
+    });
+  });
+
+  it('should track overall confidence', async () => {
+    const testImage = await createTestImage(500, 500);
+
+    const result = await scanner.scanMultipleFromImage(testImage, {
+      cardLayout: { rows: 2, cols: 2 },
+    });
+
+    expect(result.confidence).toBeGreaterThanOrEqual(0);
+    expect(result.confidence).toBeLessThanOrEqual(100);
+  });
+
+  it('should track processing time', async () => {
+    const testImage = await createTestImage(500, 500);
+
+    const result = await scanner.scanMultipleFromImage(testImage, {
+      cardLayout: { rows: 2, cols: 2 },
+    });
+
+    expect(result.processingTime).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should handle expectedCards option', async () => {
+    const testImage = await createTestImage(600, 300);
+
+    const result = await scanner.scanMultipleFromImage(testImage, {
+      expectedCards: 2,
+    });
+
+    expect(result.cardCount).toBe(2);
+    expect(result.cards).toHaveLength(2);
+  });
+
+  it('should return empty result when no layout specified for single image', async () => {
+    const testImage = await createTestImage(250, 250);
+
+    const result = await scanner.scanMultipleFromImage(testImage);
+
+    // Should treat as single card
+    expect(result.cardCount).toBe(1);
+    expect(result.cards).toHaveLength(1);
+  });
+
+  it('should scan 6 cards in 2x3 layout', async () => {
+    const testImage = await createTestImage(750, 500);
+
+    const result = await scanner.scanMultipleFromImage(testImage, {
+      cardLayout: { rows: 2, cols: 3 },
+    });
+
+    expect(result.cardCount).toBe(6);
+    expect(result.cards).toHaveLength(6);
+
+    // Verify each card has the right structure
+    for (const card of result.cards) {
+      expect(card).toHaveLength(25);
+    }
+
+    // Verify card ordering (reading order)
+    expect(result.detectedCards[0]?.index).toBe(0);
+    expect(result.detectedCards[5]?.index).toBe(5);
+  });
+});
