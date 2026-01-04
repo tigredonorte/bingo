@@ -24,6 +24,20 @@
  * ```
  *
  * @example
+ * Scanning multiple cards from a single image:
+ * ```typescript
+ * import { scanMultipleBingoCards } from '@repo/api-bingo-scanner';
+ *
+ * // Scan an image containing 6 cards arranged in 2 rows x 3 columns
+ * const cards = await scanMultipleBingoCards('./multi-cards.png', {
+ *   cardLayout: { rows: 2, cols: 3 }
+ * });
+ * console.log(cards.length);  // 6
+ * console.log(cards[0]);      // [5, 22, 34, null, 61, ...] (first card's numbers)
+ * console.log(cards[1]);      // [3, 18, 42, null, 70, ...] (second card's numbers)
+ * ```
+ *
+ * @example
  * Using the BingoScanner class for multiple scans:
  * ```typescript
  * import { BingoScanner } from '@repo/api-bingo-scanner';
@@ -43,7 +57,13 @@
  */
 
 // Main scanner exports
-export { BingoScanner, scanBingoCard, scanBingoCardDetailed } from './scanner';
+export {
+  BingoScanner,
+  scanBingoCard,
+  scanBingoCardDetailed,
+  scanMultipleBingoCards,
+  scanMultipleBingoCardsDetailed,
+} from './scanner';
 
 // Type exports
 export type {
@@ -51,6 +71,9 @@ export type {
   ScanResult,
   CellResult,
   ImageInput,
+  MultiCardScannerOptions,
+  MultiCardScanResult,
+  DetectedCard,
 } from './types';
 
 // Constants exports
@@ -58,6 +81,7 @@ export {
   BINGO_COLUMNS,
   STANDARD_BINGO_RANGES,
   DEFAULT_OPTIONS,
+  DEFAULT_MULTI_CARD_OPTIONS,
 } from './types';
 
 // Parser utilities (for advanced use cases)
@@ -80,3 +104,6 @@ export {
   getImageDimensions,
   resizeImage,
 } from './preprocessing';
+
+// Card detection utilities (for advanced use cases)
+export { detectCards, splitImage, extractCardRegion } from './card-detection';
