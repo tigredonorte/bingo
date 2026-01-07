@@ -58,16 +58,6 @@ export function detectAppleDevice(userAgent?: string): DeviceInfo {
 }
 
 /**
- * React hook for detecting Apple device on the client side
- * Returns updated device info after component mounts
- */
-export function useAppleDeviceDetection(): DeviceInfo {
-  // This will be called from a React hook in the hooks file
-  // For now, just return the detection result
-  return detectAppleDevice();
-}
-
-/**
  * Check if Apple Sign-In should be displayed
  * Shows on all Apple devices (iOS and macOS) for better UX
  * Can also be shown on non-Apple devices but Apple recommends showing it primarily on their devices

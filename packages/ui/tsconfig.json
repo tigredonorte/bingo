@@ -1,20 +1,15 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "jsx": "react-jsx",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    /* Override moduleResolution for bundler compatibility with MUI and other deps */
     "module": "ESNext",
     "moduleResolution": "bundler",
     "target": "ES2020",
-    "declaration": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "strict": true,
     "noEmit": false,
-    "isolatedModules": true,
-    "resolveJsonModule": true
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "**/*.stories.tsx"]

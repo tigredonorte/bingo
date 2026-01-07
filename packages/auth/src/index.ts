@@ -3,6 +3,35 @@ import Google from "next-auth/providers/google";
 import Facebook from "next-auth/providers/facebook";
 import Apple from "next-auth/providers/apple";
 import type { NextAuthConfig, Session, User } from "next-auth";
+import { z } from "zod";
+
+/**
+ * Schema for validating auth environment variables
+ * All OAuth credentials are required for the auth system to function
+ */
+const envSchema = z.object({
+  GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
+  GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
+  FACEBOOK_CLIENT_ID: z.string().min(1, "FACEBOOK_CLIENT_ID is required"),
+  FACEBOOK_CLIENT_SECRET: z.string().min(1, "FACEBOOK_CLIENT_SECRET is required"),
+  APPLE_CLIENT_ID: z.string().min(1, "APPLE_CLIENT_ID is required"),
+  APPLE_CLIENT_SECRET: z.string().min(1, "APPLE_CLIENT_SECRET is required"),
+});
+
+/**
+ * Validated environment variables
+ * Throws descriptive error at startup if any required env vars are missing
+ */
+function getValidatedEnv() {
+  const result = envSchema.safeParse(process.env);
+  if (!result.success) {
+    const missing = result.error.issues.map((i) => i.path.join(".")).join(", ");
+    throw new Error(`Missing or invalid environment variables: ${missing}`);
+  }
+  return result.data;
+}
+
+const env = getValidatedEnv();
 
 /**
  * Extended session type that includes user ID
@@ -21,8 +50,8 @@ export interface ExtendedSession extends Session {
 export const authConfig: NextAuthConfig = {
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
           prompt: "consent",
@@ -32,12 +61,12 @@ export const authConfig: NextAuthConfig = {
       },
     }),
     Facebook({
-      clientId: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+      clientId: env.FACEBOOK_CLIENT_ID,
+      clientSecret: env.FACEBOOK_CLIENT_SECRET,
     }),
     Apple({
-      clientId: process.env.APPLE_CLIENT_ID,
-      clientSecret: process.env.APPLE_CLIENT_SECRET,
+      clientId: env.APPLE_CLIENT_ID,
+      clientSecret: env.APPLE_CLIENT_SECRET,
     }),
   ],
   pages: {

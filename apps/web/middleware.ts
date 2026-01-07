@@ -41,17 +41,17 @@ export async function middleware(request: NextRequest) {
 
 /**
  * Configure which routes the middleware should run on
+ *
+ * The middleware is only applied to protected routes and the login page,
+ * avoiding unnecessary execution on unrelated paths for better performance.
  */
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder files (assets)
-     * - api/auth (auth API routes - must be accessible)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\..*|api/auth).*)",
+    // Protected routes (and their subpaths)
+    "/dashboard/:path*",
+    "/profile/:path*",
+    "/settings/:path*",
+    // Login route (to redirect authenticated users away from it)
+    "/login",
   ],
 };

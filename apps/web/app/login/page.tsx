@@ -46,9 +46,24 @@ export default function LoginPage(): JSX.Element {
         <p className={styles.subtitle}>Sign in to continue to your account</p>
 
         {errorMessage && (
-          <div className={styles.errorBox} onClick={clearError}>
+          <div
+            className={styles.errorBox}
+            onClick={clearError}
+            role="alert"
+            aria-live="polite"
+          >
             <span>{errorMessage}</span>
-            <button type="button" className={styles.errorClose}>×</button>
+            <button
+              type="button"
+              className={styles.errorClose}
+              aria-label="Dismiss error message"
+              onClick={(e) => {
+                e.stopPropagation();
+                clearError();
+              }}
+            >
+              ×
+            </button>
           </div>
         )}
 
