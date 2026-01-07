@@ -56,14 +56,14 @@ export default function LoginPage(): JSX.Element {
           <SocialLoginButton
             provider="google"
             onClick={() => loginWithGoogle(callbackUrl)}
-            isLoading={isLoading === "google"}
+            loading={isLoading === "google"}
             disabled={isLoading !== null && isLoading !== "google"}
           />
 
           <SocialLoginButton
             provider="facebook"
             onClick={() => loginWithFacebook(callbackUrl)}
-            isLoading={isLoading === "facebook"}
+            loading={isLoading === "facebook"}
             disabled={isLoading !== null && isLoading !== "facebook"}
           />
 
@@ -72,7 +72,7 @@ export default function LoginPage(): JSX.Element {
             <SocialLoginButton
               provider="apple"
               onClick={() => loginWithApple(callbackUrl)}
-              isLoading={isLoading === "apple"}
+              loading={isLoading === "apple"}
               disabled={isLoading !== null && isLoading !== "apple"}
             />
           )}

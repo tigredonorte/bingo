@@ -33,13 +33,14 @@ describe("SocialLoginButton", () => {
     });
 
     it(`should show loading state for ${provider}`, () => {
-      render(<SocialLoginButton provider={provider} isLoading />);
+      const { container } = render(<SocialLoginButton provider={provider} loading />);
 
-      expect(screen.getByText("Signing in...")).toBeInTheDocument();
+      // When loading, Button shows CircularProgress spinner
+      expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
     });
 
     it(`should be disabled when loading for ${provider}`, () => {
-      render(<SocialLoginButton provider={provider} isLoading />);
+      render(<SocialLoginButton provider={provider} loading />);
 
       const button = screen.getByRole("button");
       expect(button).toBeDisabled();
@@ -57,26 +58,15 @@ describe("SocialLoginButton", () => {
     render(<SocialLoginButton provider="google" />);
 
     const button = screen.getByRole("button");
-    expect(button).toHaveStyle({ width: "100%" });
+    // MUI Button with fullWidth prop applies width: 100%
+    expect(button).toHaveClass('MuiButton-fullWidth');
   });
 
-  it("should apply auto width when fullWidth is false", () => {
+  it("should not have fullWidth class when fullWidth is false", () => {
     render(<SocialLoginButton provider="google" fullWidth={false} />);
 
     const button = screen.getByRole("button");
-    expect(button).toHaveStyle({ width: "auto" });
-  });
-
-  it("should apply custom styles", () => {
-    render(
-      <SocialLoginButton
-        provider="google"
-        style={{ marginTop: "20px" }}
-      />
-    );
-
-    const button = screen.getByRole("button");
-    expect(button).toHaveStyle({ marginTop: "20px" });
+    expect(button).not.toHaveClass('MuiButton-fullWidth');
   });
 
   it("should not call onClick when disabled", () => {

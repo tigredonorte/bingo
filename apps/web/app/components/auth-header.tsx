@@ -23,7 +23,7 @@ export function AuthHeader(): JSX.Element {
           ) : isAuthenticated && user ? (
             <div className={styles.userSection}>
               <div className={styles.userInfo}>
-                <UserAvatar src={user.image} name={user.name} size={36} />
+                <UserAvatar src={user.image} name={user.name} size="sm" />
                 <span className={styles.userName}>{user.name}</span>
               </div>
               <button
