@@ -201,3 +201,186 @@ describe('optimal layout calculation', () => {
     expect(lastCard!.bounds.x).toBeGreaterThan(firstCard!.bounds.x);
   });
 });
+
+// Helper to create an image with separator lines
+async function createImageWithSeparators(
+  width: number,
+  height: number,
+  verticalSeparators: number[],
+  horizontalSeparators: number[],
+  separatorWidth = 10
+): Promise<Buffer> {
+  // Create white background
+  let image = sharp({
+    create: {
+      width,
+      height,
+      channels: 3,
+      background: { r: 255, g: 255, b: 255 },
+    },
+  });
+
+  // Composite dark lines for separators
+  const overlays: sharp.OverlayOptions[] = [];
+
+  // Add vertical separators (dark lines)
+  for (const x of verticalSeparators) {
+    const lineBuffer = await sharp({
+      create: {
+        width: separatorWidth,
+        height,
+        channels: 3,
+        background: { r: 30, g: 30, b: 30 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    overlays.push({
+      input: lineBuffer,
+      left: Math.max(0, x - Math.floor(separatorWidth / 2)),
+      top: 0,
+    });
+  }
+
+  // Add horizontal separators (dark lines)
+  for (const y of horizontalSeparators) {
+    const lineBuffer = await sharp({
+      create: {
+        width,
+        height: separatorWidth,
+        channels: 3,
+        background: { r: 30, g: 30, b: 30 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    overlays.push({
+      input: lineBuffer,
+      left: 0,
+      top: Math.max(0, y - Math.floor(separatorWidth / 2)),
+    });
+  }
+
+  if (overlays.length > 0) {
+    image = image.composite(overlays);
+  }
+
+  return image.png().toBuffer();
+}
+
+describe('automatic card detection', () => {
+  it('should detect cards separated by vertical dark line', async () => {
+    // Create 400x200 image with vertical separator at x=200
+    const testImage = await createImageWithSeparators(400, 200, [200], []);
+    const cards = await detectCards(testImage);
+
+    expect(cards.length).toBe(2);
+    // First card should be left half
+    expect(cards[0]?.bounds.x).toBe(0);
+    expect(cards[0]?.bounds.width).toBeLessThanOrEqual(205); // Allow some tolerance for separator width
+    // Second card should be right half
+    expect(cards[1]?.bounds.x).toBeGreaterThanOrEqual(195);
+  });
+
+  it('should detect cards separated by horizontal dark line', async () => {
+    // Create 200x400 image with horizontal separator at y=200
+    const testImage = await createImageWithSeparators(200, 400, [], [200]);
+    const cards = await detectCards(testImage);
+
+    expect(cards.length).toBe(2);
+    // First card should be top half
+    expect(cards[0]?.bounds.y).toBe(0);
+    expect(cards[0]?.bounds.height).toBeLessThanOrEqual(205);
+    // Second card should be bottom half
+    expect(cards[1]?.bounds.y).toBeGreaterThanOrEqual(195);
+  });
+
+  it('should detect 2x2 grid with separators', async () => {
+    // Create 400x400 image with both vertical and horizontal separators
+    const testImage = await createImageWithSeparators(400, 400, [200], [200]);
+    const cards = await detectCards(testImage);
+
+    expect(cards.length).toBe(4);
+
+    // Verify all four quadrants are detected
+    const topLeft = cards.find(c => c.bounds.x < 100 && c.bounds.y < 100);
+    const topRight = cards.find(c => c.bounds.x > 150 && c.bounds.y < 100);
+    const bottomLeft = cards.find(c => c.bounds.x < 100 && c.bounds.y > 150);
+    const bottomRight = cards.find(c => c.bounds.x > 150 && c.bounds.y > 150);
+
+    expect(topLeft).toBeDefined();
+    expect(topRight).toBeDefined();
+    expect(bottomLeft).toBeDefined();
+    expect(bottomRight).toBeDefined();
+  });
+
+  it('should fall back to single card when no separators detected', async () => {
+    // Plain white image with no separators
+    const testImage = await createTestImage(300, 300);
+    const cards = await detectCards(testImage);
+
+    expect(cards.length).toBe(1);
+    expect(cards[0]?.bounds).toEqual({ x: 0, y: 0, width: 300, height: 300 });
+  });
+
+  it('should detect 1x3 horizontal layout with separators', async () => {
+    // Create 600x200 image with 2 vertical separators
+    const testImage = await createImageWithSeparators(600, 200, [200, 400], []);
+    const cards = await detectCards(testImage);
+
+    expect(cards.length).toBe(3);
+
+    // Cards should be in left-to-right order
+    expect(cards[0]?.bounds.x).toBeLessThan(cards[1]?.bounds.x ?? 0);
+    expect(cards[1]?.bounds.x).toBeLessThan(cards[2]?.bounds.x ?? 0);
+  });
+
+  it('should ignore separators that create too-small regions', async () => {
+    // Create image with separators very close to edge (would create tiny cards)
+    const testImage = await createImageWithSeparators(400, 400, [50, 350], []);
+    const cards = await detectCards(testImage);
+
+    // Should fall back since separators at 50 and 350 would create cards that are
+    // only 12.5% of image width (below 15% minimum)
+    expect(cards.length).toBeLessThanOrEqual(2);
+  });
+
+  it('should handle images with varied content between separators', async () => {
+    // Create image with separator and different colored regions
+    const width = 400;
+    const height = 200;
+
+    // Create left half (red)
+    const leftBuffer = await sharp({
+      create: { width: 195, height, channels: 3, background: { r: 255, g: 100, b: 100 } },
+    }).png().toBuffer();
+
+    // Create separator (black)
+    const separatorBuffer = await sharp({
+      create: { width: 10, height, channels: 3, background: { r: 0, g: 0, b: 0 } },
+    }).png().toBuffer();
+
+    // Create right half (blue)
+    const rightBuffer = await sharp({
+      create: { width: 195, height, channels: 3, background: { r: 100, g: 100, b: 255 } },
+    }).png().toBuffer();
+
+    // Composite them together
+    const testImage = await sharp({
+      create: { width, height, channels: 3, background: { r: 255, g: 255, b: 255 } },
+    })
+      .composite([
+        { input: leftBuffer, left: 0, top: 0 },
+        { input: separatorBuffer, left: 195, top: 0 },
+        { input: rightBuffer, left: 205, top: 0 },
+      ])
+      .png()
+      .toBuffer();
+
+    const cards = await detectCards(testImage);
+
+    expect(cards.length).toBe(2);
+  });
+});

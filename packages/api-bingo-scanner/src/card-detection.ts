@@ -4,7 +4,7 @@ import { DEFAULT_MULTI_CARD_OPTIONS } from './types';
 
 /**
  * Detects and extracts multiple bingo cards from a single image
- * Uses a grid-based approach to split the image into card regions
+ * Uses automatic detection to find card boundaries, or falls back to grid-based splitting
  */
 export async function detectCards(
   input: ImageInput,
@@ -33,7 +33,13 @@ export async function detectCards(
     return splitByLayout(input, width, height, layout, minArea, maxArea);
   }
 
-  // Default: treat the entire image as a single card
+  // Try automatic detection
+  const autoDetectedCards = await autoDetectCards(input, width, height, minArea, maxArea);
+  if (autoDetectedCards.length > 0) {
+    return autoDetectedCards;
+  }
+
+  // Fallback: treat the entire image as a single card
   const imageBuffer = await sharp(input as Buffer | string).toBuffer();
   return [
     {
@@ -165,4 +171,200 @@ export async function extractCardRegion(
       height: bounds.height,
     })
     .toBuffer();
+}
+
+/**
+ * Automatically detects bingo cards in an image by analyzing pixel patterns
+ * Looks for separator lines (dark/light lines between cards) and grid patterns
+ */
+async function autoDetectCards(
+  input: ImageInput,
+  width: number,
+  height: number,
+  minArea: number,
+  maxArea: number
+): Promise<DetectedCard[]> {
+  // Convert to grayscale and get raw pixel data
+  const { data: pixels, info } = await sharp(input as Buffer | string)
+    .grayscale()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  // Analyze horizontal and vertical profiles to find separators
+  const horizontalSeparators = findSeparators(pixels, info.width, info.height, 'horizontal');
+  const verticalSeparators = findSeparators(pixels, info.width, info.height, 'vertical');
+
+  // Determine grid layout from separators
+  const rows = horizontalSeparators.length + 1;
+  const cols = verticalSeparators.length + 1;
+
+  // If no separators found or only 1 card detected, return empty to use fallback
+  if (rows === 1 && cols === 1) {
+    return [];
+  }
+
+  // Calculate card boundaries from separators
+  const rowBoundaries = [0, ...horizontalSeparators, height];
+  const colBoundaries = [0, ...verticalSeparators, width];
+
+  const cards: DetectedCard[] = [];
+  let index = 0;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = colBoundaries[col] ?? 0;
+      const y = rowBoundaries[row] ?? 0;
+      const cardWidth = (colBoundaries[col + 1] ?? width) - x;
+      const cardHeight = (rowBoundaries[row + 1] ?? height) - y;
+      const cardArea = cardWidth * cardHeight;
+
+      // Skip cards outside allowed size range
+      if (cardArea < minArea || cardArea > maxArea) {
+        continue;
+      }
+
+      // Extract card region
+      const cardBuffer = await sharp(input as Buffer | string)
+        .extract({
+          left: x,
+          top: y,
+          width: cardWidth,
+          height: cardHeight,
+        })
+        .toBuffer();
+
+      cards.push({
+        bounds: { x, y, width: cardWidth, height: cardHeight },
+        index,
+        imageBuffer: cardBuffer,
+      });
+
+      index++;
+    }
+  }
+
+  return cards;
+}
+
+/**
+ * Finds separator lines in the image by analyzing pixel intensity profiles
+ * Separators are typically darker (or lighter) lines between cards
+ */
+function findSeparators(
+  pixels: Buffer,
+  width: number,
+  height: number,
+  direction: 'horizontal' | 'vertical'
+): number[] {
+  const isHorizontal = direction === 'horizontal';
+  const length = isHorizontal ? height : width;
+  const crossLength = isHorizontal ? width : height;
+
+  // Calculate average intensity for each row/column
+  const profile: number[] = [];
+  for (let i = 0; i < length; i++) {
+    let sum = 0;
+    for (let j = 0; j < crossLength; j++) {
+      const pixelIndex = isHorizontal ? i * width + j : j * width + i;
+      sum += pixels[pixelIndex] ?? 0;
+    }
+    profile.push(sum / crossLength);
+  }
+
+  // Find the overall average and standard deviation
+  const avgIntensity = profile.reduce((a, b) => a + b, 0) / profile.length;
+  const variance = profile.reduce((sum, val) => sum + Math.pow(val - avgIntensity, 2), 0) / profile.length;
+  const stdDev = Math.sqrt(variance);
+
+  // Find lines that deviate significantly from average (potential separators)
+  const threshold = stdDev * 1.5;
+  const potentialSeparators: { position: number; intensity: number }[] = [];
+
+  // Use a sliding window to find separator regions
+  const windowSize = Math.max(3, Math.floor(length * 0.01));
+  for (let i = windowSize; i < length - windowSize; i++) {
+    const windowAvg = profile.slice(i - windowSize, i + windowSize + 1)
+      .reduce((a, b) => a + b, 0) / (windowSize * 2 + 1);
+
+    // Check if this region is significantly different from average
+    if (Math.abs(windowAvg - avgIntensity) > threshold) {
+      potentialSeparators.push({ position: i, intensity: windowAvg });
+    }
+  }
+
+  // Group nearby separators and find their centers
+  const separators = groupAndFindCenters(potentialSeparators, length);
+
+  // Filter separators to ensure reasonable card sizes
+  return filterSeparators(separators, length);
+}
+
+/**
+ * Groups nearby potential separators and returns their center positions
+ */
+function groupAndFindCenters(
+  potentialSeparators: { position: number; intensity: number }[],
+  totalLength: number
+): number[] {
+  if (potentialSeparators.length === 0) return [];
+
+  const minGap = totalLength * 0.05; // Minimum 5% gap between separator groups
+  const groups: { position: number; intensity: number }[][] = [];
+  let currentGroup: { position: number; intensity: number }[] = [];
+
+  for (const sep of potentialSeparators) {
+    if (currentGroup.length === 0) {
+      currentGroup.push(sep);
+    } else {
+      const lastPos = currentGroup[currentGroup.length - 1]?.position ?? 0;
+      if (sep.position - lastPos < minGap) {
+        currentGroup.push(sep);
+      } else {
+        groups.push(currentGroup);
+        currentGroup = [sep];
+      }
+    }
+  }
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup);
+  }
+
+  // Find center of each group
+  return groups.map(group => {
+    const positions = group.map(s => s.position);
+    return Math.round(positions.reduce((a, b) => a + b, 0) / positions.length);
+  });
+}
+
+/**
+ * Filters separators to ensure they create reasonably-sized card regions
+ * Removes separators that would create very small or very large regions
+ */
+function filterSeparators(separators: number[], totalLength: number): number[] {
+  if (separators.length === 0) return [];
+
+  // Standard bingo card aspect ratio is roughly square
+  // With 5x5 grid + margins, a typical card is about 20-50% of image dimension
+  const minCardSize = totalLength * 0.15; // At least 15% of image
+  const maxCardSize = totalLength * 0.85; // At most 85% of image
+
+  const filteredSeparators: number[] = [];
+  let lastPosition = 0;
+
+  for (const sep of separators) {
+    const size = sep - lastPosition;
+    if (size >= minCardSize && size <= maxCardSize) {
+      filteredSeparators.push(sep);
+      lastPosition = sep;
+    }
+  }
+
+  // Verify last region is also valid
+  const lastRegionSize = totalLength - (filteredSeparators[filteredSeparators.length - 1] ?? 0);
+  if (lastRegionSize < minCardSize) {
+    // Remove last separator if it creates too small a final region
+    filteredSeparators.pop();
+  }
+
+  return filteredSeparators;
 }
