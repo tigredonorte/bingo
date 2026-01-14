@@ -1,5 +1,5 @@
-import { PopoverProps as MuiPopoverProps } from '@mui/material';
-import React from 'react';
+import type { PopoverProps as MuiPopoverProps } from '@mui/material';
+import type React from 'react';
 
 export type HoverCardPlacement = 
   | 'top' | 'top-start' | 'top-end'
@@ -109,4 +109,9 @@ export interface HoverCardProps extends Omit<MuiPopoverProps, 'variant' | 'open'
    * Callback when hover card closes
    */
   onClose?: () => void;
+
+  /**
+   * Data test ID for testing purposes
+   */
+  dataTestId?: string;
 }
