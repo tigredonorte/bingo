@@ -1,5 +1,5 @@
-import { Email, Notifications, Phone,Settings } from '@mui/icons-material';
-import { Badge,Box, Paper, Stack, Typography } from '@mui/material';
+import { Email, Notifications, Phone, Settings } from '@mui/icons-material';
+import { Badge, Box, Paper, Stack, Typography } from '@mui/material';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 

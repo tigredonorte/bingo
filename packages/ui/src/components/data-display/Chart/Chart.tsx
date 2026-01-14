@@ -1,4 +1,4 @@
-import { alpha,Box, CircularProgress, Paper, Typography, useTheme } from '@mui/material';
+import { alpha, Box, CircularProgress, Paper, Typography, useTheme } from '@mui/material';
 import React from 'react';
 import {
   Area,
@@ -26,7 +26,7 @@ import {
   YAxis,
 } from 'recharts';
 
-import type { ChartDataPoint,ChartProps, ChartSeries } from './Chart.types';
+import type { ChartDataPoint, ChartProps, ChartSeries } from './Chart.types';
 
 export const Chart: React.FC<ChartProps> = ({
   data,

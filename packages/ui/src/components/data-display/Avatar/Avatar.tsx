@@ -1,8 +1,8 @@
-import { BrokenImage,Person } from '@mui/icons-material';
+import { BrokenImage, Person } from '@mui/icons-material';
 import { alpha, Avatar as MuiAvatar, Badge, Fade, keyframes, useTheme } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import { styled } from '@mui/material/styles';
-import React, { useCallback,useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import type { AvatarProps, AvatarSize, AvatarStatus } from './Avatar.types';
 

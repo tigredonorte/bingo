@@ -1,7 +1,7 @@
-import { Box, Button, createTheme, Stack,ThemeProvider, Typography } from '@mui/material';
+import { Box, Button, createTheme, Stack, ThemeProvider, Typography } from '@mui/material';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, fn,userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { HoverCard } from './HoverCard';
 

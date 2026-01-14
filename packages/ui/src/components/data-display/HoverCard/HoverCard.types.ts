@@ -1,5 +1,4 @@
 import type { PopoverProps as MuiPopoverProps } from '@mui/material';
-import type React from 'react';
 
 export type HoverCardPlacement = 
   | 'top' | 'top-start' | 'top-end'

@@ -1,7 +1,7 @@
 import { Star } from '@mui/icons-material';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, fn,Mock,userEvent, within } from 'storybook/test';
+import { expect, fn, Mock, userEvent, within } from 'storybook/test';
 
 import { Chip } from './Chip';
 

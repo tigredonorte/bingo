@@ -1,5 +1,5 @@
 import CancelIcon from '@mui/icons-material/Cancel';
-import { Avatar,Chip as MuiChip } from '@mui/material';
+import { Avatar, Chip as MuiChip } from '@mui/material';
 import type { KeyboardEvent, ReactElement } from 'react';
 import React, { forwardRef } from 'react';
 

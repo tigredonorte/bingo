@@ -12,7 +12,7 @@ import {
 import { styled } from '@mui/material/styles';
 import React from 'react';
 
-import type { HoverCardAnimation,HoverCardPlacement, HoverCardProps } from './HoverCard.types';
+import type { HoverCardAnimation, HoverCardPlacement, HoverCardProps } from './HoverCard.types';
 
 // Animation definitions
 const pulseAnimation = keyframes`
