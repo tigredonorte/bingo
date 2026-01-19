@@ -2,6 +2,25 @@ import sharp from 'sharp';
 import type { ImageInput, DetectedCard, MultiCardScannerOptions } from './types';
 import { DEFAULT_MULTI_CARD_OPTIONS } from './types';
 
+// Configuration constants for automatic card detection
+const SEPARATOR_DETECTION = {
+  /** Minimum gap between separator groups as percentage of image dimension */
+  MIN_GAP_PERCENT: 0.05,
+  /** Minimum window size for separator detection */
+  MIN_WINDOW_SIZE: 3,
+  /** Window size as percentage of image dimension */
+  WINDOW_SIZE_PERCENT: 0.01,
+  /** Standard deviation multiplier for threshold */
+  THRESHOLD_MULTIPLIER: 1.5,
+} as const;
+
+const CARD_SIZE_LIMITS = {
+  /** Minimum card size as percentage of image dimension */
+  MIN_PERCENT: 0.15,
+  /** Maximum card size as percentage of image dimension */
+  MAX_PERCENT: 0.85,
+} as const;
+
 /**
  * Detects and extracts multiple bingo cards from a single image
  * Uses automatic detection to find card boundaries, or falls back to grid-based splitting
@@ -260,6 +279,11 @@ function findSeparators(
   const length = isHorizontal ? height : width;
   const crossLength = isHorizontal ? width : height;
 
+  // Handle edge case of empty or very small images
+  if (length === 0 || crossLength === 0) {
+    return [];
+  }
+
   // Calculate average intensity for each row/column
   const profile: number[] = [];
   for (let i = 0; i < length; i++) {
@@ -271,20 +295,33 @@ function findSeparators(
     profile.push(sum / crossLength);
   }
 
+  // Handle edge case of empty profile
+  if (profile.length === 0) {
+    return [];
+  }
+
   // Find the overall average and standard deviation
   const avgIntensity = profile.reduce((a, b) => a + b, 0) / profile.length;
   const variance = profile.reduce((sum, val) => sum + Math.pow(val - avgIntensity, 2), 0) / profile.length;
   const stdDev = Math.sqrt(variance);
 
   // Find lines that deviate significantly from average (potential separators)
-  const threshold = stdDev * 1.5;
+  const threshold = stdDev * SEPARATOR_DETECTION.THRESHOLD_MULTIPLIER;
   const potentialSeparators: { position: number; intensity: number }[] = [];
 
   // Use a sliding window to find separator regions
-  const windowSize = Math.max(3, Math.floor(length * 0.01));
+  const windowSize = Math.max(
+    SEPARATOR_DETECTION.MIN_WINDOW_SIZE,
+    Math.floor(length * SEPARATOR_DETECTION.WINDOW_SIZE_PERCENT)
+  );
+
+  // Optimize: calculate window sum incrementally instead of using slice()
   for (let i = windowSize; i < length - windowSize; i++) {
-    const windowAvg = profile.slice(i - windowSize, i + windowSize + 1)
-      .reduce((a, b) => a + b, 0) / (windowSize * 2 + 1);
+    let windowSum = 0;
+    for (let w = i - windowSize; w <= i + windowSize; w++) {
+      windowSum += profile[w] ?? 0;
+    }
+    const windowAvg = windowSum / (windowSize * 2 + 1);
 
     // Check if this region is significantly different from average
     if (Math.abs(windowAvg - avgIntensity) > threshold) {
@@ -308,7 +345,7 @@ function groupAndFindCenters(
 ): number[] {
   if (potentialSeparators.length === 0) return [];
 
-  const minGap = totalLength * 0.05; // Minimum 5% gap between separator groups
+  const minGap = totalLength * SEPARATOR_DETECTION.MIN_GAP_PERCENT;
   const groups: { position: number; intensity: number }[][] = [];
   let currentGroup: { position: number; intensity: number }[] = [];
 
@@ -345,8 +382,8 @@ function filterSeparators(separators: number[], totalLength: number): number[] {
 
   // Standard bingo card aspect ratio is roughly square
   // With 5x5 grid + margins, a typical card is about 20-50% of image dimension
-  const minCardSize = totalLength * 0.15; // At least 15% of image
-  const maxCardSize = totalLength * 0.85; // At most 85% of image
+  const minCardSize = totalLength * CARD_SIZE_LIMITS.MIN_PERCENT;
+  const maxCardSize = totalLength * CARD_SIZE_LIMITS.MAX_PERCENT;
 
   const filteredSeparators: number[] = [];
   let lastPosition = 0;
