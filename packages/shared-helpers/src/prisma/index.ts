@@ -192,7 +192,7 @@ export const getPrismaClient = async (): Promise<PrismaClient> => {
     return prismaInstance;
   } catch {
     throw new Error(
-      'Prisma client not available. Run "pnpm prisma generate" to generate the client.'
+      'Prisma client not available. Run "pnpm --filter @repo/shared-helpers prisma generate" from the monorepo root, or "pnpm prisma generate" from packages/shared-helpers directory.'
     );
   }
 };

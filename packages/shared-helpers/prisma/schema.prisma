@@ -59,13 +59,19 @@ model BingoSessionPlayer {
   cards   BingoCard[]
 
   @@unique([userId, sessionId])
+  @@index([sessionId]) // Index for "get all players in session" queries
   @@map("bingo_session_players")
 }
 
+/// Card ownership states (at least one must be non-null):
+/// - userId set, sessionPlayerId null: Standalone scanned card (premium feature)
+/// - userId null, sessionPlayerId set: Session-only card (generated for a game)
+/// - Both set: Card belongs to user AND is used in a session
+/// Note: Both null is invalid but not enforced at DB level - validate in application
 model BingoCard {
   id              String     @id @default(uuid())
-  userId          String?    @map("user_id") // Null if session-only card
-  sessionPlayerId String?    @map("session_player_id") // Null if standalone scanned card
+  userId          String?    @map("user_id")
+  sessionPlayerId String?    @map("session_player_id")
   source          CardSource
   format          String // '5x5', '3x9'
   createdAt       DateTime   @default(now()) @map("created_at")
@@ -75,6 +81,8 @@ model BingoCard {
   sessionPlayer BingoSessionPlayer? @relation(fields: [sessionPlayerId], references: [id], onDelete: Cascade)
   cells         BingoCell[]
 
+  @@index([sessionPlayerId]) // Index for "get cards by session player" queries
+  @@index([userId]) // Index for "get cards by user" queries
   @@map("bingo_cards")
 }
 
