@@ -8,8 +8,9 @@ import {
 } from '@repo/shared-helpers';
 
 // Singleton instance of the generator service
-// WARNING: The internal CardRegistry may grow unbounded if sessions are not cleaned up.
-// Call generatorService.clearSession(sessionId) when a session ends to free memory.
+// NOTE: The internal CardRegistry automatically cleans up sessions that haven't been
+// accessed for 1 hour (default TTL). For explicit cleanup, call
+// generatorService.clearSession(sessionId) when a session ends.
 const generatorService = new BingoGeneratorService();
 
 interface RouteParams {
@@ -82,8 +83,8 @@ export async function POST(
   try {
     const { sessionId } = await params;
 
-    // Validate sessionId
-    if (!sessionId || typeof sessionId !== 'string') {
+    // Validate sessionId (must be non-empty string)
+    if (!sessionId || typeof sessionId !== 'string' || sessionId.trim().length === 0) {
       return NextResponse.json(
         { error: 'Invalid session ID' },
         { status: 400 },

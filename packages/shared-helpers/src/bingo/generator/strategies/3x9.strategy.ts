@@ -1,6 +1,9 @@
+import { createFeatureLogger } from '../../../utils/lib/logger';
 import type { CardFormatConfig, GeneratedCell } from '../generator.interface';
 import { getRandomNumbersInRange, shuffleArray } from '../utils/random.utils';
 import { BaseStrategy } from './base.strategy';
+
+const logger = createFeatureLogger('bingo:3x9');
 
 /**
  * Strategy for generating 3x9 (90-ball) bingo cards
@@ -153,7 +156,7 @@ export class Strategy3x9 extends BaseStrategy {
     const finalRowCounts = grid.map(row => row.filter(Boolean).length);
     if (!finalRowCounts.every(count => count === 5)) {
       // Fallback: regenerate with different approach
-      console.warn('[3x9Strategy] Primary distribution failed after max iterations, using fallback method');
+      logger.warn('Primary distribution failed after max iterations, using fallback method');
       return this.distributeToRowsFallback(columnCounts);
     }
 

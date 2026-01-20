@@ -24,7 +24,8 @@ export class BingoGeneratorService implements GeneratorService {
   }
 
   /**
-   * Generate a single bingo card
+   * Generate a single unique bingo card
+   * Retries up to 10 times if a duplicate is generated
    */
   async generateCard(format: '5x5' | '3x9', sessionId: string): Promise<BingoCard> {
     const strategy = this.strategies.get(format);
@@ -33,22 +34,28 @@ export class BingoGeneratorService implements GeneratorService {
       throw new Error(`Unsupported card format: ${format}`);
     }
 
-    const cells = strategy.generateCells();
-    const hash = generateCardHash(cells);
+    const maxAttempts = 10;
 
-    const card: BingoCard = {
-      id: randomUUID(),
-      sessionId,
-      format,
-      cells,
-      hash,
-      createdAt: new Date(),
-    };
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const cells = strategy.generateCells();
+      const hash = generateCardHash(cells);
 
-    // Register the card
-    this.registry.register(sessionId, hash);
+      // Try to register - returns true if card is unique
+      if (this.registry.register(sessionId, hash)) {
+        return {
+          id: randomUUID(),
+          sessionId,
+          format,
+          cells,
+          hash,
+          createdAt: new Date(),
+        };
+      }
+    }
 
-    return card;
+    throw new Error(
+      `Could not generate a unique card after ${maxAttempts} attempts`,
+    );
   }
 
   /**
