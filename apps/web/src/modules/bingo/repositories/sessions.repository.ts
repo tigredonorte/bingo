@@ -15,7 +15,10 @@ export interface SessionsRepository {
 /** Prisma client interface for type safety */
 interface PrismaClientInterface {
   bingoSession: {
-    findUnique: (args: { where: { id: string } }) => Promise<BingoSession | null>;
+    findUnique: (args: {
+      where: { id: string };
+      select?: { format?: boolean };
+    }) => Promise<BingoSession | { format: string } | null>;
   };
   bingoSessionPlayer: {
     findUnique: (args: {
@@ -48,6 +51,7 @@ export class PrismaSessionsRepository implements SessionsRepository {
   async getSessionFormat(sessionId: string): Promise<string | null> {
     const session = await this.prisma.bingoSession.findUnique({
       where: { id: sessionId },
+      select: { format: true },
     });
     return session?.format ?? null;
   }

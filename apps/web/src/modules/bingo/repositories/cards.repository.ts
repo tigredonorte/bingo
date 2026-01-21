@@ -6,10 +6,18 @@
 import type {
   BingoCard,
   BingoCardWithCells,
+  CardSource,
 } from '../types';
 
 /** Card with cells included - alias for BingoCardWithCells */
 export type CardWithCells = BingoCardWithCells;
+
+/** Type-safe where clause for BingoCard queries */
+export interface BingoCardWhereInput {
+  userId?: string | null;
+  sessionPlayerId?: string | null;
+  source?: CardSource;
+}
 
 /** Repository interface for cards */
 export interface CardsRepository {
@@ -30,8 +38,8 @@ interface PrismaClientInterface {
       include?: { cells?: boolean; sessionPlayer?: boolean };
     }) => Promise<CardWithCells | null>;
     findMany: (args: {
-      where: Partial<BingoCard>;
-      include?: { cells?: boolean };
+      where: BingoCardWhereInput;
+      include?: { cells?: boolean; sessionPlayer?: boolean };
     }) => Promise<CardWithCells[]>;
     create: (args: { data: Omit<BingoCard, 'id' | 'createdAt' | 'updatedAt'> }) => Promise<BingoCard>;
     update: (args: { where: { id: string }; data: Partial<BingoCard> }) => Promise<BingoCard>;
@@ -53,34 +61,28 @@ export class PrismaCardsRepository implements CardsRepository {
   }
 
   async findByUserId(userId: string): Promise<CardWithCells[]> {
-    const cards = await this.prisma.bingoCard.findMany({
+    return await this.prisma.bingoCard.findMany({
       where: { userId },
-      include: { cells: true },
+      include: { cells: true, sessionPlayer: true },
     });
-
-    return cards;
   }
 
   async findBySessionPlayerId(sessionPlayerId: string): Promise<CardWithCells[]> {
-    const cards = await this.prisma.bingoCard.findMany({
+    return await this.prisma.bingoCard.findMany({
       where: { sessionPlayerId },
-      include: { cells: true },
+      include: { cells: true, sessionPlayer: true },
     });
-
-    return cards;
   }
 
   async findStandaloneByUserId(userId: string): Promise<CardWithCells[]> {
-    const cards = await this.prisma.bingoCard.findMany({
+    return await this.prisma.bingoCard.findMany({
       where: {
         userId,
         sessionPlayerId: null,
         source: 'SCANNED',
       },
-      include: { cells: true },
+      include: { cells: true, sessionPlayer: true },
     });
-
-    return cards;
   }
 
   async create(data: Omit<BingoCard, 'id' | 'createdAt' | 'updatedAt'>): Promise<BingoCard> {

@@ -23,7 +23,10 @@ export interface CellsRepository {
 /** Prisma client interface for type safety */
 interface PrismaClientInterface {
   bingoCell: {
-    findMany: (args: { where: { cardId: string } }) => Promise<BingoCell[]>;
+    findMany: (args: {
+      where: { cardId: string };
+      orderBy?: { index: 'asc' | 'desc' };
+    }) => Promise<BingoCell[]>;
     findUnique: (args: {
       where: { cardId_index: { cardId: string; index: number } };
     }) => Promise<BingoCell | null>;
@@ -43,6 +46,7 @@ export class PrismaCellsRepository implements CellsRepository {
   async findByCardId(cardId: string): Promise<BingoCell[]> {
     return await this.prisma.bingoCell.findMany({
       where: { cardId },
+      orderBy: { index: 'asc' },
     });
   }
 
@@ -64,24 +68,19 @@ export class PrismaCellsRepository implements CellsRepository {
   }
 
   async bulkUpdateMarkedStatus(cardId: string, updates: CellUpdate[]): Promise<BingoCell[]> {
-    // Use a transaction to update multiple cells atomically
-    const result = await this.prisma.$transaction(async (tx: PrismaClientInterface) => {
-      const updatedCells: BingoCell[] = [];
-
-      for (const update of updates) {
-        const cell = await tx.bingoCell.update({
+    // Use a transaction with parallel updates for better performance
+    return await this.prisma.$transaction(async (tx: PrismaClientInterface) => {
+      const updatePromises = updates.map((update) =>
+        tx.bingoCell.update({
           where: {
             cardId_index: { cardId, index: update.index },
           },
           data: { marked: update.marked },
-        });
-        updatedCells.push(cell);
-      }
+        })
+      );
 
-      return updatedCells;
+      return await Promise.all(updatePromises);
     });
-
-    return result;
   }
 
   async createMany(cells: Omit<BingoCell, 'id'>[]): Promise<{ count: number }> {
