@@ -371,7 +371,7 @@ export const Integration: Story = {
     // Verify marker rendered
     await waitFor(
       async () => {
-        const _marker = await canvas.findByTestId('map-marker-0');
+        const marker = await canvas.findByTestId('map-marker-0');
         expect(marker).toBeInTheDocument();
       },
       { timeout: 10000 }

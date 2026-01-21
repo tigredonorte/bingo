@@ -47,11 +47,11 @@ const createTestComponent = (useTestMode = false) => {
       setLoading(true);
       await new Promise((resolve) => setTimeout(resolve, 100));
       const newItems = generateItems(items.length, 3);
-      setItems((_prev) => [...items, ...newItems]);
-      setHasMore((_prev) => items.length + 3 < 12);
+      setItems([...items, ...newItems]);
+      setHasMore(items.length + 3 < 12);
       setLoading(false);
       loadingRef.current = false;
-    }, [items.length]);
+    }, [items]);
 
     // Expose trigger to container for tests
     React.useEffect(() => {

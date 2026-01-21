@@ -243,7 +243,7 @@ export const KeyboardNavigation: Story = {
     }, { timeout: 3000 });
 
     // Verify button rotation indicates expanded state (transform will be a matrix in computed styles)
-    const _expandedButtonStyle = window.getComputedStyle(expandButtons[0]);
+    const expandedButtonStyle = window.getComputedStyle(expandButtons[0]);
     await expect(expandedButtonStyle.transform).not.toBe('none');
 
     // Test action button with keyboard
@@ -744,10 +744,9 @@ export const Performance: Story = {
 
     // Test scrolling performance for vertical timeline - ensure container exists
     await waitFor(() => {
-      const _container = canvas.getByTestId('timeline-container');
+      const container = canvas.getByTestId('timeline-container');
       expect(container).toBeInTheDocument();
     }, { timeout: 3000 });
-    const _container = canvas.getByTestId('timeline-container') as HTMLElement;
     
     // Verify all titles are rendered correctly
     for (let i = 0; i < 5; i++) { // Check first 5 items
