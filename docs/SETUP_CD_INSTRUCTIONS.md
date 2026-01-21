@@ -68,14 +68,14 @@ module.exports = nextConfig;
 
 Option A - Via GitHub UI:
 1. Go to https://github.com/tigredonorte/bingo/pulls
-2. Find the PR from branch `claude/setup-ci-cloud-deploy-FcFcS`
+2. Find the PR for your CD setup changes
 3. Click **"Merge pull request"**
 
 Option B - Via command line:
 ```bash
 git checkout main
 git pull origin main
-git merge claude/setup-ci-cloud-deploy-FcFcS
+git merge your-feature-branch
 git push origin main
 ```
 

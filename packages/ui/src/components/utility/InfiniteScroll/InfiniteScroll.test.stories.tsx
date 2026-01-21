@@ -47,8 +47,8 @@ const createTestComponent = (useTestMode = false) => {
       setLoading(true);
       await new Promise((resolve) => setTimeout(resolve, 100));
       const newItems = generateItems(items.length, 3);
-      setItems((prev) => [...prev, ...newItems]);
-      setHasMore((prev) => items.length + 3 < 12);
+      setItems((_prev) => [...items, ...newItems]);
+      setHasMore((_prev) => items.length + 3 < 12);
       setLoading(false);
       loadingRef.current = false;
     }, [items.length]);
@@ -57,8 +57,8 @@ const createTestComponent = (useTestMode = false) => {
     React.useEffect(() => {
       loadMoreRef.current = loadMore;
       if (useTestMode && containerRef.current) {
-        (containerRef.current as any)._testTrigger = triggerRef.current || loadMore;
-        (containerRef.current as any)._loadMore = loadMore;
+        (containerRef.current as HTMLElement & { _testTrigger?: () => void; _loadMore?: () => Promise<void> })._testTrigger = triggerRef.current || loadMore;
+        (containerRef.current as HTMLElement & { _testTrigger?: () => void; _loadMore?: () => Promise<void> })._loadMore = loadMore;
       }
     });
 

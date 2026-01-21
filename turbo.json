@@ -14,7 +14,9 @@
         "FACEBOOK_CLIENT_ID",
         "FACEBOOK_CLIENT_SECRET",
         "APPLE_CLIENT_ID",
-        "APPLE_CLIENT_SECRET"
+        "APPLE_CLIENT_SECRET",
+        "SKIP_ENV_VALIDATION",
+        "NODE_ENV"
       ]
     },
     "lint": {
