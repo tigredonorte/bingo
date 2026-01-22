@@ -16,6 +16,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./button": "./src/button.tsx",
+    "./social-login-button": "./src/social-login-button.tsx",
+    "./user-avatar": "./src/user-avatar.tsx",
     "./utils": "./src/utils/index.ts",
     "./data-display/Alert": "./src/components/data-display/Alert/index.ts",
     "./data-display/AlertDialog": "./src/components/data-display/AlertDialog/index.ts",
