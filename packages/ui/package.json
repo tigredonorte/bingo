@@ -15,6 +15,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./button": "./src/button.tsx",
     "./utils": "./src/utils/index.ts",
     "./data-display/Alert": "./src/components/data-display/Alert/index.ts",
     "./data-display/AlertDialog": "./src/components/data-display/AlertDialog/index.ts",
