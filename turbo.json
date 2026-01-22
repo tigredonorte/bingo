@@ -26,7 +26,8 @@
         "SNOW_CONNECT_TIMEOUT_MS",
         "MAXMIND_ACCOUNT_ID",
         "MAXMIND_LICENSE_KEY",
-        "LOG_LEVEL"
+        "LOG_LEVEL",
+        "NEXT_PHASE"
       ]
     },
     "lint": {
