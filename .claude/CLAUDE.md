@@ -102,12 +102,19 @@ ln -s GEMINI.md CLAUDE.md
 - Always validate user input
 - Follow security best practices in code
 
+## Environment Variables - CHECK BEFORE CLAIMING LIMITATIONS
+- **ALWAYS check what environment variables are available** before claiming you can't do something
+- Run `env | grep -i <keyword>` to check for relevant variables (DO_, AWS_, GH_, etc.)
+- If variables exist, USE THEM - don't claim you can't access external services
+- Common variables: DO_API_TOKEN, DO_SSH_PRIVATE_KEY_B64, GITHUB_TOKEN, etc.
+
 ## Communication Style
 - Be concise - use 1-3 sentences when possible
 - No unnecessary preambles or conclusions
 - Show file paths with line numbers (file:line format)
 - Only use emojis if explicitly requested
 - Focus on actions over explanations unless asked
+- **NEVER suggest running commands on user's local machine** - always find a way to do it within this environment or via CI/CD
 
 ## Testing Approach
 - Check for existing test setup before assuming frameworks
